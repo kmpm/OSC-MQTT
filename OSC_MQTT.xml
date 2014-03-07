@@ -1,0 +1,1309 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://www.plcopen.org/xml/tc6_0200">
+  <fileHeader companyName="" productName="CODESYS" productVersion="CODESYS V3.5 SP4 Patch 1" creationDateTime="2014-03-07T15:58:01.2038599" />
+  <contentHeader name="MQTT Library" version="1.0.0.0" modificationDateTime="2014-03-07T15:57:18.0145414" organization="OSC" author="Peter Magnusson">
+    <Comment>Open Source CODESYS (OSC) MQTT Client library</Comment>
+    <coordinateInfo>
+      <fbd>
+        <scaling x="1" y="1" />
+      </fbd>
+      <ld>
+        <scaling x="1" y="1" />
+      </ld>
+      <sfc>
+        <scaling x="1" y="1" />
+      </sfc>
+    </coordinateInfo>
+    <addData>
+      <data name="http://www.3s-software.com/plcopenxml/projectinformation" handleUnknown="implementation">
+        <ProjectInformation>
+          <property name="Author" type="string">Peter Magnusson</property>
+          <property name="Company" type="string">OSC</property>
+          <property name="DefaultNamespace" type="string">OSC_MQTT</property>
+          <property name="Description" type="string">Open Source CODESYS (OSC) MQTT Client library</property>
+          <property name="LibraryCategories" type="unknown" />
+          <property name="LibraryCategoryIds" type="unknown" />
+          <property name="Title" type="string">MQTT Library</property>
+          <property name="Version" type="version">1.0.0.0</property>
+          <property name="library-category-list" type="library-category-list">Application|Utils</property>
+        </ProjectInformation>
+      </data>
+    </addData>
+  </contentHeader>
+  <types>
+    <dataTypes>
+      <dataType name="CLIENTSTATE">
+        <baseType>
+          <enum>
+            <values>
+              <value name="STOP" value="0" />
+              <value name="INIT" />
+              <value name="CONNECTING" />
+              <value name="CONNECTED" />
+              <value name="DISCONNECTING" />
+              <value name="DISCONNECTED" />
+              <value name="CLOSE" />
+              <value name="ERROR" />
+            </values>
+          </enum>
+        </baseType>
+        <addData />
+      </dataType>
+      <dataType name="MESSAGETYPE">
+        <baseType>
+          <enum>
+            <values>
+              <value name="CONNECT" value="16#10" />
+              <value name="CONNACK" value="16#20" />
+              <value name="PUBLISH" value="16#30" />
+              <value name="PUBACK" value="16#40" />
+              <value name="SUBSCRIBE" value="16#80" />
+              <value name="SUBACK" value="16#90" />
+              <value name="UNSUBSCRIBE" value="16#A0" />
+              <value name="UNSUBACK" value="16#B1" />
+              <value name="PINGREQ" value="16#C0" />
+              <value name="PINGRESP" value="16#D0" />
+              <value name="DISCONNECT" value="16#E0" />
+            </values>
+            <baseType>
+              <BYTE />
+            </baseType>
+          </enum>
+        </baseType>
+        <addData />
+      </dataType>
+      <dataType name="MQTTMESSAGE">
+        <baseType>
+          <struct>
+            <variable name="MessageType">
+              <type>
+                <derived name="MESSAGETYPE" />
+              </type>
+            </variable>
+            <variable name="DUP">
+              <type>
+                <BYTE />
+              </type>
+            </variable>
+            <variable name="QoS">
+              <type>
+                <derived name="QoS" />
+              </type>
+            </variable>
+            <variable name="RetainMsg">
+              <type>
+                <BYTE />
+              </type>
+            </variable>
+            <variable name="Length">
+              <type>
+                <BYTE />
+              </type>
+            </variable>
+            <variable name="Payload">
+              <type>
+                <array>
+                  <dimension lower="0" upper="126" />
+                  <baseType>
+                    <BYTE />
+                  </baseType>
+                </array>
+              </type>
+            </variable>
+          </struct>
+        </baseType>
+        <addData />
+      </dataType>
+      <dataType name="QoS">
+        <baseType>
+          <enum>
+            <values>
+              <value name="AtMostOnce" value="2#0" />
+              <value name="AtLeastOnce" value="2#10" />
+              <value name="ExactlyOnce" value="2#100" />
+            </values>
+            <baseType>
+              <BYTE />
+            </baseType>
+          </enum>
+        </baseType>
+        <addData />
+      </dataType>
+    </dataTypes>
+    <pous>
+      <pou name="MQTTClient" pouType="functionBlock">
+        <interface>
+          <inputVars>
+            <variable name="sServerIP">
+              <type>
+                <string />
+              </type>
+            </variable>
+            <variable name="uiPort">
+              <type>
+                <UINT />
+              </type>
+              <initialValue>
+                <simpleValue value="1883" />
+              </initialValue>
+            </variable>
+            <variable name="tKeepaliveInterval">
+              <type>
+                <TIME />
+              </type>
+              <initialValue>
+                <simpleValue value="TIME#15s0ms" />
+              </initialValue>
+            </variable>
+            <variable name="xEnable">
+              <type>
+                <BOOL />
+              </type>
+            </variable>
+          </inputVars>
+          <outputVars>
+            <variable name="xOnline">
+              <type>
+                <BOOL />
+              </type>
+            </variable>
+            <variable name="dwError">
+              <type>
+                <DWORD />
+              </type>
+            </variable>
+          </outputVars>
+          <localVars>
+            <variable name="MQTT_TIMEAHEAD">
+              <type>
+                <TIME />
+              </type>
+            </variable>
+            <variable name="Keepalive">
+              <type>
+                <derived name="TON" />
+              </type>
+            </variable>
+            <variable name="xKeepaliveEnabled">
+              <type>
+                <BOOL />
+              </type>
+            </variable>
+            <variable name="xServerAlive">
+              <type>
+                <BOOL />
+              </type>
+            </variable>
+            <variable name="TCPIPAddress">
+              <type>
+                <derived name="NBS.IP_ADDR" />
+              </type>
+            </variable>
+            <variable name="TCPClient">
+              <type>
+                <derived name="NBS.TCP_Client" />
+              </type>
+            </variable>
+            <variable name="TCPConnection">
+              <type>
+                <derived name="CAA.HANDLE" />
+              </type>
+              <documentation>
+                <xhtml xmlns="http://www.w3.org/1999/xhtml"> FB TCP Client </xhtml>
+              </documentation>
+            </variable>
+            <variable name="TCPRead">
+              <type>
+                <derived name="NBS.TCP_Read" />
+              </type>
+              <documentation>
+                <xhtml xmlns="http://www.w3.org/1999/xhtml"> Handle to the established connection </xhtml>
+              </documentation>
+            </variable>
+            <variable name="TCPWrite">
+              <type>
+                <derived name="NBS.TCP_Write" />
+              </type>
+              <documentation>
+                <xhtml xmlns="http://www.w3.org/1999/xhtml"> FB TCP Writer </xhtml>
+              </documentation>
+            </variable>
+            <variable name="RBUF">
+              <type>
+                <array>
+                  <dimension lower="0" upper="Constants.MQTT_MAX_PACKET_SIZE" />
+                  <baseType>
+                    <BYTE />
+                  </baseType>
+                </array>
+              </type>
+            </variable>
+            <variable name="SBUF">
+              <type>
+                <array>
+                  <dimension lower="0" upper="Constants.MQTT_MAX_PACKET_SIZE" />
+                  <baseType>
+                    <BYTE />
+                  </baseType>
+                </array>
+              </type>
+              <documentation>
+                <xhtml xmlns="http://www.w3.org/1999/xhtml"> Receive Buffer</xhtml>
+              </documentation>
+            </variable>
+            <variable name="sLength">
+              <type>
+                <UINT />
+              </type>
+              <documentation>
+                <xhtml xmlns="http://www.w3.org/1999/xhtml"> Send Buffer</xhtml>
+              </documentation>
+            </variable>
+            <variable name="_nextMsgId">
+              <type>
+                <UINT />
+              </type>
+            </variable>
+            <variable name="old_activate">
+              <type>
+                <BOOL />
+              </type>
+              <initialValue>
+                <simpleValue value="FALSE" />
+              </initialValue>
+            </variable>
+            <variable name="eClientState">
+              <type>
+                <derived name="CLIENTSTATE" />
+              </type>
+            </variable>
+            <variable name="ePreviousClientState">
+              <type>
+                <derived name="CLIENTSTATE" />
+              </type>
+            </variable>
+            <variable name="cb">
+              <type>
+                <BYTE />
+              </type>
+            </variable>
+            <variable name="idx1">
+              <type>
+                <INT />
+              </type>
+            </variable>
+            <variable name="_isWriting">
+              <type>
+                <derived name="MESSAGETYPE" />
+              </type>
+            </variable>
+            <variable name="_hasMessage">
+              <type>
+                <BOOL />
+              </type>
+              <documentation>
+                <xhtml xmlns="http://www.w3.org/1999/xhtml">Command that is written.</xhtml>
+              </documentation>
+            </variable>
+            <variable name="msgIn">
+              <type>
+                <derived name="MQTTMESSAGE" />
+              </type>
+              <documentation>
+                <xhtml xmlns="http://www.w3.org/1999/xhtml">the last received message</xhtml>
+              </documentation>
+            </variable>
+            <variable name="xSend">
+              <type>
+                <BOOL />
+              </type>
+            </variable>
+          </localVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">
+Keepalive(IN:=xKeepaliveEnabled, PT:= MQTT_TIMEAHEAD);
+//first case of state
+IF eClientState &lt;&gt; ePreviousClientState THEN
+	CASE eClientState OF
+		CLIENTSTATE.INIT:
+			{IF defined (DEBUG_MQTTCLIENT)}
+			LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'State.INIT');
+			{END_IF}
+			MQTT_TIMEAHEAD:= UDINT_TO_TIME(TIME_TO_UDINT(tKeepaliveInterval) / 3 * 2);// 2/3 to be paranoid 
+		CLIENTSTATE.CONNECTING:
+			{IF defined (DEBUG_MQTTCLIENT)}
+			LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'State.CONNECTING');
+			{END_IF}
+		CLIENTSTATE.CONNECTED:
+			{IF defined (DEBUG_MQTTCLIENT)}
+			LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'State.CONNECTED');
+			{END_IF}
+		CLIENTSTATE.DISCONNECTING:
+			{IF defined (DEBUG_MQTTCLIENT)}
+			LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'State.DISCONNECTING');
+			{END_IF}
+		CLIENTSTATE.DISCONNECTED:
+			{IF defined (DEBUG_MQTTCLIENT)}
+			LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'State.DISCONNECTED');
+			{END_IF}
+		CLIENTSTATE.CLOSE:		
+			{IF defined (DEBUG_MQTTCLIENT)}
+			LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'State.CLOSE');
+			{END_IF}
+		CLIENTSTATE.ERROR:
+			{IF defined (DEBUG_MQTTCLIENT)}
+			LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'State.ERROR');
+			{END_IF}
+	END_CASE
+END_IF
+ePreviousClientState:= eClientState;
+
+//every time the loop is in a certain state.
+CASE eClientState OF
+	
+	CLIENTSTATE.STOP:
+		xOnline := FALSE;
+		
+	CLIENTSTATE.INIT:
+		SysMem.SysMemSet(ADR(SBUF), 0, SIZEOF(SBUF)); //clear send buffer;
+		SysMem.SysMemSet(ADR(RBUF), 0, SIZEOF(RBUF)); //clear receive buffer;
+		TCPIPAddress.sAddr := sServerIP;
+		xSend:=FALSE;
+		dwError := 0;
+		sLength:=0;
+		_hasMessage:= FALSE;
+		_nextMsgId := 1;
+		TCPWrite(xExecute:= FALSE);
+		(* The client tries to establish a connection to a mqtt server *)
+		TCPClient(xEnable:= TRUE, udiTimeOut:= 0, ipAddr:= TCPIPAddress, uiPort:= uiPort, hConnection=&gt; TCPConnection);
+		
+			
+		IF TCPClient.xActive THEN 
+			eClientState:= CLIENTSTATE.CONNECTING;
+			xServerAlive:=TRUE;
+			THIS^._connect();
+		ELSIF TCPClient.xError THEN
+			
+			eClientState:= CLIENTSTATE.ERROR;
+		END_IF	
+	(*------------------------- *)
+	
+
+	
+	CLIENTSTATE.CONNECTED:
+			xKeepaliveEnabled:= TRUE;
+			xOnline:= TRUE;
+	(*------------------------- *)
+	
+	CLIENTSTATE.DISCONNECTING:
+			xKeepaliveEnabled:=FALSE;
+			IF NOT xSend THEN
+				eClientState:= DISCONNECTED;
+			END_IF
+	(*------------------------- *)	
+	
+	CLIENTSTATE.DISCONNECTED:		
+		//logger('disconnected');
+		xKeepaliveEnabled:=FALSE;
+		eClientState:= CLOSE;
+	(*------------------------- *)
+	
+	CLIENTSTATE.ERROR:
+		xSend:=FALSE;
+		TCPClient(xEnable := FALSE);
+		eCLientState:= CLOSE;
+		
+	(*------------------------- *)
+	
+	CLIENTSTATE.CLOSE:		
+		//logger('close');
+		xServerAlive:=FALSE;
+		xKeepaliveEnabled:=FALSE;
+		old_activate := FALSE;
+		xOnline:= FALSE;
+		
+		TCPWrite(xExecute:= FALSE);
+		TCPRead(xEnable:=FALSE);
+		TCPClient(xEnable:= FALSE);
+		
+		eClientState := CLIENTSTATE.STOP;
+		
+		
+		
+	(*------------------------- *)
+	
+END_CASE
+
+
+
+
+//IPC1(IP:= DWORD#0, PORT:= WORD#0 , TIME_OUT:= TIMEOUT, IP_C:= IP_C1, S_BUF:= S_BUF1, R_BUF:= R_BUF1); (* MQTT Connection *)
+
+
+
+
+IF NOT old_activate AND xEnable THEN
+	eClientState := INIT;
+	old_activate:= TRUE;
+END_IF
+
+IF NOT xEnable AND old_activate THEN
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Falling flank of xConnect ');
+	{END_IF}
+	THIS^._disconnect();
+	old_activate:= FALSE;
+END_IF
+
+IF xSend AND TCPConnection = CAA.gc_hINVALID THEN
+	xSend:= FALSE;
+	IF eClientState &lt;= CLIENTSTATE.DISCONNECTED THEN
+		eClientState:= CLIENTSTATE.DISCONNECTED;
+	END_IF
+	
+END_IF
+
+
+IF TCPClient.xEnable AND TCPClient.xActive AND TCPClient.hConnection &lt;&gt; CAA.gc_hINVALID THEN
+	THIS^._Keepalive();
+	THIS^._Send();
+	THIS^._Receive();
+END_IF
+
+
+</xhtml>
+          </ST>
+        </body>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_writeByte">
+              <interface>
+                <returnType>
+                  <INT />
+                </returnType>
+                <inOutVars>
+                  <variable name="pos">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                </inOutVars>
+                <inputVars>
+                  <variable name="b">
+                    <type>
+                      <BYTE />
+                    </type>
+                  </variable>
+                  <variable name="pBuf">
+                    <type>
+                      <pointer>
+                        <baseType>
+                          <array>
+                            <dimension lower="0" upper="Constants.MQTT_MAX_PACKET_SIZE" />
+                            <baseType>
+                              <BYTE />
+                            </baseType>
+                          </array>
+                        </baseType>
+                      </pointer>
+                    </type>
+                  </variable>
+                </inputVars>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">//Add to current position according to size
+pBuf^[pos]:= b;
+//increase size
+pos:= pos +1;</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_connect">
+              <interface>
+                <returnType>
+                  <BOOL />
+                </returnType>
+                <localVars>
+                  <variable name="name">
+                    <type>
+                      <wstring />
+                    </type>
+                    <initialValue>
+                      <simpleValue value="&quot;01234567890123456789&quot;" />
+                    </initialValue>
+                  </variable>
+                  <variable name="dwId">
+                    <type>
+                      <DWORD />
+                    </type>
+                  </variable>
+                  <variable name="id">
+                    <type>
+                      <string />
+                    </type>
+                  </variable>
+                  <variable name="v">
+                    <type>
+                      <BYTE />
+                    </type>
+                  </variable>
+                  <variable name="w">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                  <variable name="length">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                  <variable name="MAX_NAME_LENGTH">
+                    <type>
+                      <UDINT />
+                    </type>
+                    <initialValue>
+                      <simpleValue value="20" />
+                    </initialValue>
+                  </variable>
+                </localVars>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
+IF TCPClient.xActive THEN
+		
+	SysTarget.SysTargetGetNodeName(ADR(name), ADR(MAX_NAME_LENGTH));
+	SysTarget.SysTargetGetId(ADR(dwId));
+	id := CONCAT('mqttio/', WSTRING_TO_STRING(name));
+	id := CONCAT(id, '-');
+	id := CONCAT(id, DWORD_TO_STRING(dwId));
+	
+	 
+
+	// {0x00,0x06,'M','Q','I','s','d','p',MQTTPROTOCOLVERSION};
+	//leave room in the buffer for header and variable field length field
+	length:=2;
+	//start adding
+	_writeByte(pos:=length, b:=16#0, pBuf := ADR(SBUF));
+	_writeByte(pos:=length, b:=16#6, pBuf := ADR(SBUF));
+	_writeString(pos:=length, msg:='MQIsdp');
+	_writeByte(pos:=length, b:=Constants.MQTTPROTOCOLVERSION, pBuf := ADR(SBUF));
+	
+	//connect flags
+	v := 16#2;//no will topic
+	_writeByte(pos:=length, b:=v, pBuf := ADR(SBUF));
+	
+	//Keep Alive Timer
+	_writeWord(pos:=length, w:= TIME_TO_WORD(tKeepaliveInterval/1000),  pBuf := ADR(SBUF)); 
+	
+	//client id length
+	w:= INT_TO_UINT(LEN(id));
+	_writeWord(pos:=length, w:=w,  pBuf := ADR(SBUF));
+	//client id
+	_writeString(pos:=length, msg:=id);
+	_write(MESSAGETYPE.CONNECT, length);
+
+END_IF </xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_write">
+              <interface>
+                <returnType>
+                  <BOOL />
+                </returnType>
+                <inputVars>
+                  <variable name="header">
+                    <type>
+                      <derived name="MESSAGETYPE" />
+                    </type>
+                  </variable>
+                  <variable name="length">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                </inputVars>
+                <localVars>
+                  <variable name="len">
+                    <type>
+                      <BYTE />
+                    </type>
+                  </variable>
+                </localVars>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">IF TCPClient.xActive THEN	
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,CONCAT('Writing msg:', BYTE_TO_STRING(header) ));
+	{END_IF}
+	_isWriting:= header;
+	len:= UINT_TO_BYTE(length);
+	SBUF[0]:= header;
+	IF len &gt;= 2 THEN
+		SBUF[1]:= len -2;
+	ELSE
+		SBUF[1]:= 0;
+	END_IF
+	
+	IF(length&lt;2) THEN
+		length:= 2;
+	END_IF
+	sLength:= length;
+	xSend:= TRUE;
+END_IF</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_writeString">
+              <interface>
+                <inOutVars>
+                  <variable name="pos">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                </inOutVars>
+                <inputVars>
+                  <variable name="msg">
+                    <type>
+                      <string />
+                    </type>
+                  </variable>
+                </inputVars>
+                <localVars>
+                  <variable name="ps">
+                    <type>
+                      <pointer>
+                        <baseType>
+                          <BYTE />
+                        </baseType>
+                      </pointer>
+                    </type>
+                  </variable>
+                  <variable name="end">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                  <variable name="i">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                  <variable name="length">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                </localVars>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">ps := ADR(msg);
+length := INT_TO_UINT(LEN(msg));
+end := MIN(pos + length, SIZEOF(SBUF));
+IF end &gt; 0 THEN end := end -1; END_IF;
+FOR i := pos TO end DO
+	SBUF[i] := ps^;
+	ps := ps + 1;
+END_FOR;
+pos:=pos + length;
+</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_writeWord">
+              <interface>
+                <returnType>
+                  <INT />
+                </returnType>
+                <inOutVars>
+                  <variable name="pos">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                </inOutVars>
+                <inputVars>
+                  <variable name="w">
+                    <type>
+                      <WORD />
+                    </type>
+                  </variable>
+                  <variable name="pBuf">
+                    <type>
+                      <pointer>
+                        <baseType>
+                          <array>
+                            <dimension lower="0" upper="Constants.MQTT_MAX_PACKET_SIZE" />
+                            <baseType>
+                              <BYTE />
+                            </baseType>
+                          </array>
+                        </baseType>
+                      </pointer>
+                    </type>
+                  </variable>
+                </inputVars>
+                <localVars>
+                  <variable name="v">
+                    <type>
+                      <BYTE />
+                    </type>
+                  </variable>
+                  <variable name="length">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                </localVars>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">length:= pos;
+v:= UINT_TO_BYTE(SHR(w, 8));
+_writeByte(pos:=length, b:=v, pBuf:=pBuf );
+v:= UINT_TO_BYTE(w AND 16#FF);
+_writeByte(pos:=length, b:=v, pBuf := pBuf); 
+pos:= length;</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_disconnect">
+              <interface>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">{IF defined (DEBUG_MQTTCLIENT)}
+LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Calling _Disconnect');
+{END_IF}
+SysMem.SysMemSet(ADR(SBUF), 0, Constants.MQTT_MAX_PACKET_SIZE); //clear send buffer;
+THIS^._write(MESSAGETYPE.DISCONNECT, 0);
+eCLIENTSTATE:= CLIENTSTATE.DISCONNECTING;
+</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="Publish">
+              <interface>
+                <inputVars>
+                  <variable name="sTopic">
+                    <type>
+                      <string />
+                    </type>
+                  </variable>
+                  <variable name="sValue">
+                    <type>
+                      <string />
+                    </type>
+                  </variable>
+                  <variable name="xExecute">
+                    <type>
+                      <BOOL />
+                    </type>
+                  </variable>
+                  <variable name="bQos">
+                    <type>
+                      <BYTE />
+                    </type>
+                  </variable>
+                  <variable name="xRetain">
+                    <type>
+                      <BOOL />
+                    </type>
+                  </variable>
+                </inputVars>
+                <outputVars>
+                  <variable name="xDone">
+                    <type>
+                      <BOOL />
+                    </type>
+                  </variable>
+                </outputVars>
+                <localVars>
+                  <variable name="length">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                  <variable name="xBusyPublishing">
+                    <type>
+                      <BOOL />
+                    </type>
+                    <documentation>
+                      <xhtml xmlns="http://www.w3.org/1999/xhtml">will be set if publishing</xhtml>
+                    </documentation>
+                  </variable>
+                  <variable name="bBuf">
+                    <type>
+                      <array>
+                        <dimension lower="0" upper="Constants.MQTT_MAX_PACKET_SIZE" />
+                        <baseType>
+                          <BYTE />
+                        </baseType>
+                      </array>
+                    </type>
+                  </variable>
+                </localVars>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
+IF xExecute AND NOT xBusyPublishing THEN //Rising flank
+	IF TCPClient.xActive THEN
+		{IF defined (DEBUG_MQTTCLIENT)}
+		LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Publishing');
+		{END_IF}
+		xDone:=FALSE;
+		xBusyPublishing:=TRUE;
+		//sTopic := concat(sTopicPrefix, sTopic);
+		length:= 2;//starting position in the buffer
+		_writeWord(pos:=length, w:= INT_TO_UINT(LEN(sTopic)), pBuf := ADR(bBuf));
+		_writeString(pos:=length, msg:=sTopic);
+		IF bQos &gt; 0 THEN //only send msg id if needed.
+			_writeWord(pos:=length, w:= _nextMsgId, pBuf := ADR(SBUF));
+		END_IF
+		_writeString(pos:=length, msg:=sValue);
+		_write(MESSAGETYPE.PUBLISH, length);
+	END_IF
+ELSIF NOT xExecute AND xBusyPublishing THEN //falling flank
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Publishing falling');
+	{END_IF}
+	xDone:=FALSE;
+	xBusyPublishing:=FALSE;
+ELSIF xExecute AND xBusyPublishing THEN //steady high
+	//TODO:Wait for PUBACK if QoS &gt;0
+	IF NOT xSend THEN
+		{IF defined (DEBUG_MQTTCLIENT)}
+		LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Publishing Done');
+		{END_IF}
+		xDone:=TRUE;
+	END_IF
+END_IF
+</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="Subscribe">
+              <interface>
+                <returnType>
+                  <BOOL />
+                </returnType>
+                <inputVars>
+                  <variable name="sTopic">
+                    <type>
+                      <string />
+                    </type>
+                  </variable>
+                </inputVars>
+                <localVars>
+                  <variable name="length">
+                    <type>
+                      <UINT />
+                    </type>
+                  </variable>
+                </localVars>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">//Save callback for later and send subscribe message
+//m_Subscriptions.AddSub(sTopic:=sTopic, pfbCallback:=pfbCallback);
+
+//leave room in the buffer for header and variable field length field
+length:=2;
+
+//topic and length of topic
+_writeWord(pos:=length, INT_TO_UINT(LEN(sTopic)), pBuf := ADR(SBUF));
+_writeString(pos:=length, msg:=sTopic);
+
+//requested qos
+_writeByte(pos:=length, b:=0, pBuf := ADR(SBUF));
+
+_write(MESSAGETYPE.SUBSCRIBE, length);
+</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_Send">
+              <interface>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">IF xSend THEN
+	
+
+{IF defined (DEBUG_MQTTCLIENT)}
+LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Sending...');
+{END_IF}
+TCPWrite(xExecute:= TRUE, udiTimeOut:= 0, hConnection:= TCPConnection, szSize:= sLength, pData:= ADR(SBUF));
+IF TCPWrite.xDone THEN 
+	_nextMsgId:= _nextMsgId +1;				
+	TCPWrite(xExecute:= FALSE);	
+	xSend:= FALSE;
+	sLength:= 0;		
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Sent');
+	{END_IF}	
+ELSIF TCPWrite.xError THEN
+	//eCLIENTSTATE := CLIENTSTATE.ERROR;
+	TCPWrite(xExecute:=FALSE);
+	xSend:= FALSE;
+	sLength:=0;
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Error Sending');
+	{END_IF}
+END_IF
+IF _isWriting = MESSAGETYPE.DISCONNECT THEN
+	eClientState := CLIENTSTATE.DISCONNECTED;
+	xSend:=FALSE;
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Send Disconnect');
+	{END_IF}
+END_IF
+
+END_IF</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_Receive">
+              <interface>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">TCPRead(xEnable:= TRUE, hConnection:= TCPConnection, szSize:= Constants.MQTT_MAX_PACKET_SIZE, pData:= ADR(RBUF));
+IF TCPRead.xReady AND TCPRead.szCount &gt; 0 THEN
+	msgIn.MessageType := RBUF[0] AND 16#F0; //mask of first half
+	msgIn.DUP := RBUF[0] AND 16#08;
+	msgIn.QoS := RBUF[0] AND 16#06;
+	msgIn.RetainMsg := RBUF[0] AND 1;
+	msgIn.Length := RBUF[1]; //remaining length;
+	SysMem.SysMemCpy(ADR(msgIn.Payload[0]), ADR(RBUF[2]), msgIn.Length);
+	_hasMessage := TRUE;
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,CONCAT('Received:', BYTE_TO_STRING(msgIn.MessageType)));
+	{END_IF}
+ELSIF TCPRead.xError THEN
+	eClientState := CLIENTSTATE.ERROR;
+	{IF defined (DEBUG_MQTTCLIENT)}
+	LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Receive Error');
+	{END_IF}
+END_IF
+
+
+
+
+IF _hasMessage THEN
+//logger('hasMessage');	
+	CASE _isWriting OF
+		MESSAGETYPE.CONNECT:
+			IF msgIn.MessageType = MESSAGETYPE.CONNACK THEN
+				IF msgIn.Payload[1] = 0 THEN //connection accepted
+					eClientState:= CONNECTED; 
+					
+				ELSE
+					{IF defined (DEBUG_MQTTCLIENT)}
+					LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Could not authenticate');
+					{END_IF}
+					eClientState:= CLOSE;	
+				END_IF
+			END_IF
+		(*----------------------------*)
+		
+		MESSAGETYPE.SUBSCRIBE:
+			IF msgIn.MessageType = MESSAGETYPE.SUBACK THEN
+				{IF defined (DEBUG_MQTTCLIENT)}
+				LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'SUBACK');
+				{END_IF}
+			ELSE
+				{IF defined (DEBUG_MQTTCLIENT)}
+				LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'SUBACK EXPECTED BUT NOT RECEIVED');
+				{END_IF}	
+			END_IF
+			
+		(*----------------------------*)
+		
+		MESSAGETYPE.PINGREQ:
+			IF msgIn.MessageType = MESSAGETYPE.PINGRESP THEN
+				//server alive
+				{IF defined (DEBUG_MQTTCLIENT)}
+				LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'PINGRESP');
+				{END_IF}
+				xServerAlive:=TRUE;
+			END_IF 
+		(*----------------------------*)
+		
+	
+	END_CASE
+_hasMessage:= FALSE; //message is dealt with
+END_IF</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+          <data name="http://www.3s-software.com/plcopenxml/method" handleUnknown="implementation">
+            <Method name="_Keepalive">
+              <interface>
+                <addData>
+                  <data name="http://www.3s-software.com/plcopenxml/accessmodifiers" handleUnknown="implementation">
+                    <AccessModifiers Private="true" />
+                  </data>
+                </addData>
+              </interface>
+              <body>
+                <ST>
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">//keepalive triggered
+IF Keepalive.Q THEN
+	xKeepaliveEnabled:= FALSE;
+	IF NOT xServerAlive THEN
+		//SOMETHING BAD HAPPENED
+		{IF defined (DEBUG_MQTTCLIENT)}
+		LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'Something bad happened with connection');
+		{END_IF}
+		eClientState:= CLOSE;
+	ELSE
+		//check if server is alive.
+		xServerAlive:=FALSE;
+		{IF defined (DEBUG_MQTTCLIENT)}
+		LogAdd(STD_LOGGER,'MQTTClient',UDINT_TO_DINT(LogClass.LOG_INFO),0,0,'PINGREQ');
+		{END_IF}
+		_write(MESSAGETYPE.PINGREQ, 0);
+	END_IF
+END_IF</xhtml>
+                </ST>
+              </body>
+              <addData />
+            </Method>
+          </data>
+        </addData>
+      </pou>
+      <pou name="MQTTPub" pouType="functionBlock">
+        <interface>
+          <inputVars>
+            <variable name="pClient">
+              <type>
+                <pointer>
+                  <baseType>
+                    <derived name="MQTTClient" />
+                  </baseType>
+                </pointer>
+              </type>
+            </variable>
+            <variable name="sTopic">
+              <type>
+                <string />
+              </type>
+            </variable>
+            <variable name="sValue">
+              <type>
+                <string />
+              </type>
+            </variable>
+            <variable name="xExecute">
+              <type>
+                <BOOL />
+              </type>
+            </variable>
+          </inputVars>
+          <outputVars>
+            <variable name="xDone">
+              <type>
+                <BOOL />
+              </type>
+            </variable>
+          </outputVars>
+        </interface>
+        <body>
+          <ST>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">IF xExecute THEN
+	pClient^.Publish(sTopic:=sTopic, sValue:=sValue, bQos:=0, xRetain:=FALSE, xExecute:=TRUE, xDone =&gt; xDone);
+END_IF</xhtml>
+          </ST>
+        </body>
+        <addData />
+      </pou>
+    </pous>
+  </types>
+  <instances>
+    <configurations />
+  </instances>
+  <addData>
+    <data name="http://www.3s-software.com/plcopenxml/globalvars" handleUnknown="implementation">
+      <globalVars name="Constants" constant="true">
+        <variable name="MQTTPROTOCOLVERSION">
+          <type>
+            <BYTE />
+          </type>
+          <initialValue>
+            <simpleValue value="BYTE#3" />
+          </initialValue>
+        </variable>
+        <variable name="MQTT_MAX_PACKET_SIZE">
+          <type>
+            <BYTE />
+          </type>
+          <initialValue>
+            <simpleValue value="128" />
+          </initialValue>
+          <documentation>
+            <xhtml xmlns="http://www.w3.org/1999/xhtml">maximum packet size</xhtml>
+          </documentation>
+        </variable>
+        <variable name="MQTT_MIN_KEEPALIVE">
+          <type>
+            <TIME />
+          </type>
+          <initialValue>
+            <simpleValue value="TIME#15s0ms" />
+          </initialValue>
+        </variable>
+        <variable name="MQTT_DEFAULT_PORT">
+          <type>
+            <UINT />
+          </type>
+          <initialValue>
+            <simpleValue value="1883" />
+          </initialValue>
+        </variable>
+        <variable name="MQTT_MAX_CALLBACKS">
+          <type>
+            <INT />
+          </type>
+          <initialValue>
+            <simpleValue value="3" />
+          </initialValue>
+        </variable>
+        <addData>
+          <data name="http://www.3s-software.com/plcopenxml/attributes" handleUnknown="implementation">
+            <Attributes>
+              <Attribute Name="qualified_only" Value="" />
+            </Attributes>
+          </data>
+        </addData>
+      </globalVars>
+    </data>
+    <data name="http://www.3s-software.com/plcopenxml/libraries" handleUnknown="implementation">
+      <Libraries>
+        <Library Name="CmpLog, 3.5.2.0 (System)" Namespace="CmpLog" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="false" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="Standard, 3.5.2.0 (System)" Namespace="Standard" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="false" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="CAA Types Extern, 3.5.3.0 (CAA Technical Workgroup)" Namespace="CAA" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="false" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="CmpErrors Interfaces, * (System)" Namespace="CmpErrors" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="SysTypes Interfaces, * (System)" Namespace="SysTypes" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="IoStandard, 3.5.4.0 (System)" Namespace="IoStandard" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="SysMem, 3.5.4.0 (System)" Namespace="SysMem" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="CAA Net Base Services, 3.5.4.0 (CAA Technical Workgroup)" Namespace="NBS" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="SysTarget, 3.5.4.0 (System)" Namespace="SysTarget" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="CmpEventMgr, 3.5.4.0 (System)" Namespace="CmpEventMgr" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <Library Name="CmpApp, 3.5.4.0 (System)" Namespace="CmpApp" HideWhenReferencedAsDependency="false" PublishSymbolsInContainer="true" SystemLibrary="false" LinkAllContent="false" />
+        <addData />
+      </Libraries>
+    </data>
+    <data name="http://www.3s-software.com/plcopenxml/projectstructure" handleUnknown="discard">
+      <ProjectStructure>
+        <Folder Name="MQTT">
+          <Folder Name="Function Blocks">
+            <Object Name="MQTTClient">
+              <Object Name="_writeByte" />
+              <Object Name="_connect" />
+              <Object Name="_write" />
+              <Object Name="_writeString" />
+              <Object Name="_writeWord" />
+              <Object Name="_disconnect" />
+              <Object Name="Publish" />
+              <Object Name="Subscribe" />
+              <Object Name="_Send" />
+              <Object Name="_Receive" />
+              <Object Name="_Keepalive" />
+            </Object>
+            <Object Name="MQTTPub" />
+          </Folder>
+          <Folder Name="Enums">
+            <Object Name="CLIENTSTATE" />
+            <Object Name="MESSAGETYPE" />
+            <Object Name="QoS" />
+          </Folder>
+          <Folder Name="Structs">
+            <Object Name="MQTTMESSAGE" />
+          </Folder>
+          <Folder Name="GlobalConstants">
+            <Object Name="Constants" />
+          </Folder>
+        </Folder>
+        <Object Name="Library Manager" />
+      </ProjectStructure>
+    </data>
+  </addData>
+</project>
